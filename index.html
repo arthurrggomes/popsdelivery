@@ -5,90 +5,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Você Ganhou um Picolé!</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 20px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to bottom, #ff4c4c, #5c2e1f);
+      background: linear-gradient(to bottom right, #440202, #910303);
       color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
       text-align: center;
+      animation: fadeIn 1s ease-in-out;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     h1 {
-      margin-top: 40px;
-      font-size: 1.8rem;
-      line-height: 1.3;
+      margin-top: 30px;
+      font-size: 1.9rem;
+      line-height: 1.4;
+      color: #fffbe7;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
     }
+
     .media-container {
       margin: 30px 0;
       width: 100%;
       max-width: 400px;
-      background-color: rgba(255, 255, 255, 0.1);
-      border: 2px dashed #fff;
-      border-radius: 16px;
-      padding: 16px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
     }
-    .media-container img,
+
     .media-container video {
       width: 100%;
-      border-radius: 12px;
+      border-radius: 14px;
       display: block;
     }
-    .regras {
-      max-width: 500px;
-      background-color: rgba(0, 0, 0, 0.25);
+
+    #codigo {
+      margin-top: 20px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 12px 20px;
       border-radius: 12px;
+      color: #fffbe7;
+      max-width: 90%;
+    }
+
+    .regras {
+      margin-top: 30px;
+      max-width: 500px;
+      background-color: rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
       padding: 20px;
       font-size: 1rem;
-      line-height: 1.5;
+      line-height: 1.6;
+      color: #fffbe7;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
+
     .regras strong {
-      color: #ffcc70;
+      color: #fffdad;
     }
-    #codigo {
-      margin-top: 30px;
-      font-size: 1.4rem;
-      font-weight: bold;
-      color: #ffcc70;
-    }
+
     @media (max-width: 480px) {
       h1 {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
       }
       .regras {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
       }
       #codigo {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
       }
     }
   </style>
 </head>
 <body>
 
-  <h1>🎉 Parabéns, sua curiosidade foi premiada!<br>
-  Você ganhou um picolé. Vai lá buscar antes que derreta! 😅</h1>
+  <h1>🎉 Parabéns, sua curiosidade foi premiada!</h1>
+<p class="subtitulo">Você acaba de ganhar um delicioso picolé! 😋</p>
+<p class="destaque">Mas atenção: <strong>o código abaixo é único</strong> e obrigatório para a retirada.</p>
 
-  <div class="media-container">
-    <!-- Troque a imagem abaixo pelo seu conteúdo (imagem ou vídeo) -->
-    <img src="https://i.imgur.com/S1oUosP.png" alt="Picolé Premiado" />
-    <!-- Para vídeo, comente a imagem acima e descomente o vídeo abaixo -->
-    <!--
-    <video src="seu-video.mp4" controls autoplay muted loop></video>
-    -->
-  </div>
+<div class="media-container">
+  <video src="video.mp4" controls autoplay muted loop></video>
+</div>
 
-  <div id="codigo">Carregando código...</div>
+<div id="codigo">Carregando código...</div>
 
-  <div class="regras">
-    <p>📸 <strong>Tire um print</strong> desta página.</p>
-    <p>🍦 Vá até a loja <strong>Pops Delivery</strong> e mostre o print para retirar seu <strong>picolé grátis</strong>.</p>
-    <p>🕐 Promoção válida <strong>apenas 1 picolé por pessoa</strong>.</p>
-    <p>⏰ Horário: <strong>Domingo, das 13h às 18h</strong>.</p>
-  </div>
+<div class="regras">
+  <p>📸 <strong>Tire um print</strong> desta tela com o código.</p>
+  <p>🍦 Apresente o print na loja <strong>Pops Delivery</strong> para retirar o seu <strong>picolé grátis</strong>.</p>
+  <p>🔐 <strong>Somente um resgate por código e por pessoa</strong>.</p>
+  <p>⏰ Retirada válida apenas <strong>neste domingo, das 13h às 18h</strong>.</p>
+</div>
 
   <script>
     const LIMITE_GLOBAL = 300;
@@ -102,23 +124,18 @@
     function exibirCodigo(codigo) {
       codigoDiv.innerHTML =
         "🔢 <strong>Seu código de retirada:</strong><br>" +
-        "<span style='font-size: 2rem; color: #ffcc70;'>" + codigo + "</span>";
+        "<span style='font-size: 2rem; color: #fffbe7;'>" + codigo + "</span>";
     }
 
     if (codigoExistente) {
-      // Já tem código gerado neste navegador, só exibe
       exibirCodigo(codigoExistente);
     } else {
-      // Verifica se o limite foi atingido (simulado localmente)
       if (contadorSimulado >= LIMITE_GLOBAL) {
         codigoDiv.innerText = "🚫 Todos os 300 picolés já foram retirados.";
       } else {
-        // Gera novo código
         const novoCodigo = Math.floor(100000 + Math.random() * 900000);
-        // Salva no localStorage
         localStorage.setItem(CHAVE_CODIGO, novoCodigo);
         localStorage.setItem(CHAVE_CONTADOR, contadorSimulado + 1);
-        // Exibe
         exibirCodigo(novoCodigo);
       }
     }
