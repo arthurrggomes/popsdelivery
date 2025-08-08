@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title></title>
+  <title>Roleta da Sorte - Ganhe seu Picolé!</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     body {
@@ -20,10 +20,11 @@
       padding: 20px;
       overflow-x: hidden;
     }
-    h2 {
-      font-size: 2rem;
+    h3 {
+      font-size: 1.8rem;
       color: #fffbe7;
-      margin-bottom: 30px;
+      margin-top: 30px;
+      margin-bottom: 20px;
     }
     #roleta-container {
       position: relative;
@@ -50,6 +51,7 @@
       border-right: 20px solid transparent;
       border-bottom: 30px solid #ff3b3b;
       filter: drop-shadow(0 0 5px #ff3b3b);
+      z-index: 10;
     }
     #girar {
       margin: 20px 0;
@@ -107,9 +109,9 @@
 </head>
 <body>
 
-  <h3>🎉 Gire a roleta e ganhe uma delicia da Pops sorvete!</h3>
+  <h3>🎉 Gire a roleta e ganhe uma delícia da Pops sorvete!</h3>
 
-  <div id="roleta-container" style="margin-top: 30px;">
+  <div id="roleta-container">
     <canvas id="roleta" width="300" height="300"></canvas>
     <div id="spinner"></div>
   </div>
@@ -117,10 +119,9 @@
   <button class="btn btn-danger btn-lg" id="girar">
     Girar a Roleta <span id="tentativas">(5 tentativas restantes)</span>
   </button>
-  
 
   <div id="resultado" class="text-center shadow">
-    <!-- Resultado será exibido aqui -->
+    <!-- Resultado aparecerá aqui -->
   </div>
 
   <div id="confetes"></div>
@@ -129,8 +130,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/SoundJS/1.0.2/soundjs.min.js"></script>
 
   <script>
-    
-
     // Registrar sons
     createjs.Sound.registerSound("https://actions.google.com/sounds/v1/cartoon/pop.ogg", "somParabens");
     createjs.Sound.registerSound("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg", "somGirar");
@@ -142,13 +141,14 @@
     const tentativasSpan = document.getElementById('tentativas');
     const confetesDiv = document.getElementById('confetes');
 
+    // Prêmios e cores
     const premios = [
-      { text: "🎁", color: "#a8d85c" },
-      { text: "🍦", color: "#d85c5c" }, // prêmio fixo na posição 1
-      { text: "🎈", color: "#5c9ad8" },
-      { text: "🍭", color: "#5cd89a" },
-      { text: "✨", color: "#d8a75c" },
-      { text: "⭐", color: "#865cd8" },
+      { text: "😞", color: "#a8d85c" },   
+      { text: "😢", color: "#d85c5c" },  
+      { text: "😕", color: "#5c9ad8" },   
+      { text: "😟", color: "#5cd89a" },   
+      { text: "🙁", color: "#d8a75c" },  
+      { text: "🎁", color: "#865cd8" },   
     ];
 
     const regrasTexto = `📸 Tire um print desta tela com o código.\n
@@ -167,6 +167,7 @@
     let tentativas = parseInt(localStorage.getItem('tentativas')) || 5;
     let ganhou = localStorage.getItem('ganhou') === 'true';
 
+    // Desenha a roleta
     function desenharRoleta() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (let i = 0; i < numPremios; i++) {
@@ -193,16 +194,19 @@
       }
     }
 
+    // Atualiza o texto e estado do botão de tentativas
     function atualizarTentativas() {
       tentativasSpan.textContent = `(${tentativas} tentativa${tentativas === 1 ? '' : 's'} restante${tentativas === 1 ? '' : 's'})`;
       girarBtn.disabled = tentativas <= 0 || ganhou;
     }
 
+    // Salva estado no localStorage
     function salvarEstado() {
       localStorage.setItem('tentativas', tentativas);
       localStorage.setItem('ganhou', ganhou);
     }
 
+    // Cria confetes animados
     function criarConfete() {
       const el = document.createElement("div");
       el.style.position = "fixed";
@@ -219,12 +223,14 @@
       setTimeout(() => confetesDiv.removeChild(el), 3000);
     }
 
+    // Solta 100 confetes em sequência
     function soltarConfetes() {
       for (let i = 0; i < 100; i++) {
         setTimeout(criarConfete, i * 20);
       }
     }
 
+    // Mostra o resultado após giro
     function mostrarResultado(ganhou) {
       resultadoDiv.style.display = 'block';
 
@@ -265,22 +271,27 @@
 
       let premioIndex;
 
+      // Se ganhou, forçamos o prêmio do picolé na posição 1
       if (!ganhou && tentativas === 0) {
         ganhou = true;
         salvarEstado();
         premioIndex = 1; // índice do picolé
       } else if (!ganhou) {
+        // Sorteia prêmio aleatório diferente do picolé
         do {
           premioIndex = Math.floor(Math.random() * numPremios);
         } while (premioIndex === 1);
       } else {
+        // Caso já tenha ganhado, sorteia prêmio qualquer exceto picolé
         do {
           premioIndex = Math.floor(Math.random() * numPremios);
         } while (premioIndex === 1);
       }
 
       const voltas = 5;
-      const anguloFinal = (voltas * 2 * Math.PI) + (premioIndex * arc) + arc / 2;
+      // Ajuste do ângulo para alinhar o setor do prêmio com o ponteiro no topo
+      const anguloFinal = (voltas * 2 * Math.PI) + (premioIndex * arc) - (arc / 2) - (Math.PI / 2);
+
       let inicio = null;
 
       function animar(timestamp) {
@@ -305,5 +316,6 @@
       requestAnimationFrame(animar);
     });
   </script>
+
 </body>
 </html>
