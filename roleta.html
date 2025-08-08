@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #440202, #910303);
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    h2 {
+      font-size: 2rem;
+      color: #fffbe7;
+      margin-bottom: 30px;
+    }
+    #roleta-container {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      margin-bottom: 20px;
+    }
+    #roleta {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 8px solid #ff5e5e;
+      background: radial-gradient(circle, #8b0000, #300000);
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    #spinner {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid #ff3b3b;
+      filter: drop-shadow(0 0 5px #ff3b3b);
+    }
+    #girar {
+      margin: 20px 0;
+    }
+    #resultado {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      max-width: 90vw;
+      margin-bottom: 20px;
+      display: none;
+      color: #fffbe7;
+    }
+    #codigo-resgate {
+      background-color: #fffbe7;
+      color: #910303;
+      font-weight: bold;
+      font-size: 2rem;
+      border-radius: 12px;
+      padding: 10px 20px;
+      margin: 15px 0;
+      user-select: all;
+    }
+    #texto-premio {
+      font-size: 1rem;
+      margin-bottom: 20px;
+      color: #ffd86e;
+      white-space: pre-line;
+      text-align: left;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #video-premio {
+      width: 100%;
+      max-width: 320px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #ff5e5e;
+      margin-bottom: 20px;
+    }
+    #confetes {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    @keyframes cair {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h3>🎉 Gire a roleta e ganhe uma delicia da Pops sorvete!</h3>
+
+  <div id="roleta-container" style="margin-top: 30px;">
+    <canvas id="roleta" width="300" height="300"></canvas>
+    <div id="spinner"></div>
+  </div>
+
+  <button class="btn btn-danger btn-lg" id="girar">
+    Girar a Roleta <span id="tentativas">(5 tentativas restantes)</span>
+  </button>
+  <button onclick="resetarEstado()" class="btn btn-secondary mt-3">Resetar Tentativas (Teste)</button>
+
+  <div id="resultado" class="text-center shadow">
+    <!-- Resultado será exibido aqui -->
+  </div>
+
+  <div id="confetes"></div>
+
+  <!-- SoundJS CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/SoundJS/1.0.2/soundjs.min.js"></script>
+
+  <script>
+    function resetarEstado() {
+      localStorage.removeItem('tentativas');
+      localStorage.removeItem('ganhou');
+      location.reload();
+    }
+
+    // Registrar sons
+    createjs.Sound.registerSound("https://actions.google.com/sounds/v1/cartoon/pop.ogg", "somParabens");
+    createjs.Sound.registerSound("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg", "somGirar");
+
+    const canvas = document.getElementById('roleta');
+    const ctx = canvas.getContext('2d');
+    const girarBtn = document.getElementById('girar');
+    const resultadoDiv = document.getElementById('resultado');
+    const tentativasSpan = document.getElementById('tentativas');
+    const confetesDiv = document.getElementById('confetes');
+
+    const premios = [
+      { text: "🎁", color: "#a8d85c" },
+      { text: "🍦", color: "#d85c5c" }, // prêmio fixo na posição 1
+      { text: "🎈", color: "#5c9ad8" },
+      { text: "🍭", color: "#5cd89a" },
+      { text: "✨", color: "#d8a75c" },
+      { text: "⭐", color: "#865cd8" },
+    ];
+
+    const regrasTexto = `📸 Tire um print desta tela com o código.\n
+🍦 Apresente o print na loja Pops Delivery para retirar o seu picolé grátis.\n
+🔐 Somente um resgate por código e por pessoa.\n
+⏰ Retirada válida apenas neste domingo, 10/08 das 13h às 18h.`;
+
+    const numPremios = premios.length;
+    const arc = 2 * Math.PI / numPremios;
+    const radius = canvas.width / 2 - 10;
+    const center = canvas.width / 2;
+
+    let anguloAtual = 0;
+    let girando = false;
+
+    let tentativas = parseInt(localStorage.getItem('tentativas')) || 5;
+    let ganhou = localStorage.getItem('ganhou') === 'true';
+
+    function desenharRoleta() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < numPremios; i++) {
+        const angInicio = i * arc + anguloAtual;
+        const angFim = angInicio + arc;
+
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, angInicio, angFim);
+        ctx.fillStyle = premios[i].color;
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(angInicio + arc / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 28px Verdana";
+        ctx.fillText(premios[i].text, radius - 10, 12);
+        ctx.restore();
+      }
+    }
+
+    function atualizarTentativas() {
+      tentativasSpan.textContent = `(${tentativas} tentativa${tentativas === 1 ? '' : 's'} restante${tentativas === 1 ? '' : 's'})`;
+      girarBtn.disabled = tentativas <= 0 || ganhou;
+    }
+
+    function salvarEstado() {
+      localStorage.setItem('tentativas', tentativas);
+      localStorage.setItem('ganhou', ganhou);
+    }
+
+    function criarConfete() {
+      const el = document.createElement("div");
+      el.style.position = "fixed";
+      el.style.width = "12px";
+      el.style.height = "12px";
+      el.style.borderRadius = "50%";
+      el.style.background = `hsl(${Math.random() * 360}, 100%, 70%)`;
+      el.style.left = `${Math.random() * 100}vw`;
+      el.style.top = "-20px";
+      el.style.zIndex = "9999";
+      el.style.pointerEvents = "none";
+      el.style.animation = `cair 3s linear forwards`;
+      confetesDiv.appendChild(el);
+      setTimeout(() => confetesDiv.removeChild(el), 3000);
+    }
+
+    function soltarConfetes() {
+      for (let i = 0; i < 100; i++) {
+        setTimeout(criarConfete, i * 20);
+      }
+    }
+
+    function mostrarResultado(ganhou) {
+      resultadoDiv.style.display = 'block';
+
+      if (ganhou) {
+        const codigo = Math.floor(100000 + Math.random() * 900000);
+        resultadoDiv.innerHTML = `
+          <h3 class="text-warning">🎉 Parabéns! Você ganhou um delicioso Picolé!</h3>
+          <video id="video-premio" controls autoplay muted playsinline loop>
+            <source src="video.mp4" type="video/mp4">
+            Seu navegador não suporta vídeo.
+          </video>
+          <div id="codigo-resgate">${codigo}</div>
+          <p id="texto-premio">${regrasTexto.replace(/\n/g, '<br>')}</p>
+        `;
+
+        createjs.Sound.play("somParabens");
+        soltarConfetes();
+
+      } else {
+        resultadoDiv.innerHTML = `<p class="text-light fs-4">😞 Não foi dessa vez. Tente novamente!</p>`;
+      }
+    }
+
+    desenharRoleta();
+    atualizarTentativas();
+
+    girarBtn.addEventListener("click", () => {
+      if (girando || tentativas <= 0 || ganhou) return;
+
+      createjs.Sound.play("somGirar");
+
+      resultadoDiv.style.display = 'none';
+      girando = true;
+
+      tentativas--;
+      salvarEstado();
+      atualizarTentativas();
+
+      let premioIndex;
+
+      if (!ganhou && tentativas === 0) {
+        ganhou = true;
+        salvarEstado();
+        premioIndex = 1; // índice do picolé
+      } else if (!ganhou) {
+        do {
+          premioIndex = Math.floor(Math.random() * numPremios);
+        } while (premioIndex === 1);
+      } else {
+        do {
+          premioIndex = Math.floor(Math.random() * numPremios);
+        } while (premioIndex === 1);
+      }
+
+      const voltas = 5;
+      const anguloFinal = (voltas * 2 * Math.PI) + (premioIndex * arc) + arc / 2;
+      let inicio = null;
+
+      function animar(timestamp) {
+        if (!inicio) inicio = timestamp;
+        const tempo = timestamp - inicio;
+        const duracao = 4000;
+        const progresso = Math.min(tempo / duracao, 1);
+        const easeOut = 1 - Math.pow(1 - progresso, 3);
+        anguloAtual = easeOut * anguloFinal;
+
+        desenharRoleta();
+
+        if (progresso < 1) {
+          requestAnimationFrame(animar);
+        } else {
+          girando = false;
+          mostrarResultado(ganhou && premioIndex === 1);
+          if (tentativas <= 0) girarBtn.disabled = true;
+        }
+      }
+
+      requestAnimationFrame(animar);
+    });
+  </script>
+</body>
+</html>
