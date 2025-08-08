@@ -117,7 +117,7 @@
   <button class="btn btn-danger btn-lg" id="girar">
     Girar a Roleta <span id="tentativas">(5 tentativas restantes)</span>
   </button>
-  <button onclick="resetarEstado()" class="btn btn-secondary mt-3">Resetar Tentativas (Teste)</button>
+  
 
   <div id="resultado" class="text-center shadow">
     <!-- Resultado será exibido aqui -->
@@ -129,11 +129,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/SoundJS/1.0.2/soundjs.min.js"></script>
 
   <script>
-    function resetarEstado() {
-      localStorage.removeItem('tentativas');
-      localStorage.removeItem('ganhou');
-      location.reload();
-    }
+    
 
     // Registrar sons
     createjs.Sound.registerSound("https://actions.google.com/sounds/v1/cartoon/pop.ogg", "somParabens");
